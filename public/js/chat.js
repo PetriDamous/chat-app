@@ -11,6 +11,9 @@ const locationTemplate = document.getElementById('location-template').innerHTML;
 // Connects client to server
 const socket = io();
 
+//Query string used for user name and room
+const {username, room} = Qs.parse(location.search, {ignoreQueryPrefix: true}); 
+
 // Listening for incoming messages
 socket.on('message', (message) => {
     const html = Mustache.render(messageTemplate, {
@@ -66,3 +69,5 @@ $sendLocation.addEventListener('click', () => {
         });
     });
 });
+
+socket.emit('join', {username, room});

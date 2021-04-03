@@ -23,9 +23,16 @@ app.use(express.static(publicPath));
 
 // Listens for client to connect
 io.on('connection', (socket) => {
-    socket.emit('message', generateMessage('Welcome to hell!!!!'));
 
-    socket.broadcast.emit('message', generateMessage('A user has joined the room.'));
+
+    socket.on('join', ({username, room}) => {
+        socket.join(room);
+
+        socket.emit('message', generateMessage('Welcome to hell!!!!'));
+
+        socket.broadcast.to(room).emit('message', generateMessage(`${username} has joined the room.`));
+
+    });
 
     socket.on('sendMessage', (chatMessage, callback) => {
         io.emit('message', generateMessage(chatMessage));
