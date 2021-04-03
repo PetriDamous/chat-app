@@ -2,7 +2,10 @@ const express = require('express');
 const http = require('http');
 const path = require('path');
 const socketio = require('socket.io');
+
+const {generateMessage} = require('./utilis/messages');
 require('dotenv').config({path: path.resolve(__dirname, '../env/dev.env')});
+
 
 const app = express();
 
@@ -20,16 +23,26 @@ app.use(express.static(publicPath));
 
 // Listens for client to connect
 io.on('connection', (socket) => {
-    socket.emit('message', 'Welcome to hell!!!!');
+    socket.emit('message', generateMessage('Welcome to hell!!!!'));
 
-    socket.broadcast.emit('message', 'I user has joined the room.');
+    socket.broadcast.emit('message', generateMessage('A user has joined the room.'));
 
-    socket.on('sendMessage', (chatMessage) => {
-        io.emit('message', chatMessage);
+    socket.on('sendMessage', (chatMessage, callback) => {
+        io.emit('message', generateMessage(chatMessage));
+
+        callback('Got it!!!');
+    });    
+
+    socket.on('sendLocation', (location, callback) => {
+        const {latitude, longitude} = location;
+
+        io.emit('locationMessage', generateMessage(`https://google.com/maps?q=${latitude},${longitude}`));
+
+        callback('Location recieved');
     });
 
     socket.on('disconnect', () => {
-        io.emit('message', 'A user has left the room....Booo!!!');
+        io.emit('message', generateMessage('A user has left the room....Booo!!!'));
     });
 });
 
