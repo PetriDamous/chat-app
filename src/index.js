@@ -4,6 +4,7 @@ const path = require('path');
 const socketio = require('socket.io');
 
 const {generateMessage} = require('./utilis/messages');
+const {addUser, removeUser, getUser,  getUsersInRoom} = require('./utilis/users');
 require('dotenv').config({path: path.resolve(__dirname, '../env/dev.env')});
 
 
@@ -24,32 +25,55 @@ app.use(express.static(publicPath));
 // Listens for client to connect
 io.on('connection', (socket) => {
 
+    // Adds user to array and room
+    socket.on('join', ({username, room}, callback) => {
+        const {error, user} = addUser({id: socket.id, username, room});
 
-    socket.on('join', ({username, room}) => {
-        socket.join(room);
+        if (error) return callback(error);
 
-        socket.emit('message', generateMessage('Welcome to hell!!!!'));
+        socket.join(user.room);
 
-        socket.broadcast.to(room).emit('message', generateMessage(`${username} has joined the room.`));
+        socket.emit('message', generateMessage(`Welcome to hell ${user.username}!!!!`));
+
+        socket.broadcast.to(user.room).emit('message', generateMessage(`${user.username} has joined the room.`));
 
     });
 
+    // User send message in joined room
     socket.on('sendMessage', (chatMessage, callback) => {
-        io.emit('message', generateMessage(chatMessage));
 
-        callback('Got it!!!');
+        const user = getUser(socket.id);
+
+        if (user) {
+            io.to(user.room).emit('message', generateMessage(chatMessage));
+            callback('Message sent!!');
+        }
+ 
     });    
 
+    // User sends location message in joined room
     socket.on('sendLocation', (location, callback) => {
         const {latitude, longitude} = location;
 
-        io.emit('locationMessage', generateMessage(`https://google.com/maps?q=${latitude},${longitude}`));
+        const user = getUser(socket.id);
 
-        callback('Location recieved');
+        if (user) {
+            io.to(user.room).emit('locationMessage', generateMessage(`https://google.com/maps?q=${latitude},${longitude}`));
+
+            callback('Location recieved');
+        }
+
+
     });
 
+    // Disconnects user
     socket.on('disconnect', () => {
-        io.emit('message', generateMessage('A user has left the room....Booo!!!'));
+        const user = removeUser(socket.id);
+
+        if (user) {
+            io.to(user.room).emit('message', generateMessage(`${user.username} has left the room....Booo!!!`));
+        }
+        
     });
 });
 
