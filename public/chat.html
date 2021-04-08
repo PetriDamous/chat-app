@@ -13,11 +13,12 @@
 </head>
 <body>
    <h1>Chat App</h1>
+   <div id="user-list"></div>
 
     <div id="message"></div>
 
    <form id="chat-form">
-       <input id="form-input" type="text">
+       <input id="form-input" type="text" name="message" required autocomplete="off">
        <button id="form-submit" type="submit">Submit</button>
    </form>
    <button id="send-location">Send Location</button>
@@ -26,14 +27,26 @@
    <script id="message-template" type="text/html">
         <div>
             <p>{{createdAt}}</p>
-            <p>{{message}}</p>
+            <p>{{username}}: {{message}}</p>
         </div>
     </script>
 
     <script id="location-template" type="text/html">
         <div>
-            <p>{{createdAt}} - <a href="{{location}}" target="_blank">My current location.</a></p>
+            <p>{{createdAt}}</p>
+            <p>{{username}}: <a href="{{location}}" target="_blank">My current location.</a></p>
         </div>
+    </script>
+
+    <script id="room-template" type="text/html">
+        <p>{{room}}</p>
+
+        <ul>
+            {{#users}}
+                <li>{{username}}</li>
+            {{/users}}
+        </ul>
+
     </script>
 </body>
 </html>

@@ -33,9 +33,14 @@ io.on('connection', (socket) => {
 
         socket.join(user.room);
 
-        socket.emit('message', generateMessage(`Welcome to hell ${user.username}!!!!`));
+        socket.emit('message', generateMessage('Admin', `Welcome to hell ${user.username}!!!!`));
 
-        socket.broadcast.to(user.room).emit('message', generateMessage(`${user.username} has joined the room.`));
+        socket.broadcast.to(user.room).emit('message', generateMessage('Admin', `${user.username} has joined the room.`));
+
+        io.to(user.room).emit('roomData', {
+            room: user.room,
+            users: getUsersInRoom(user.room)
+        });
 
     });
 
@@ -45,7 +50,7 @@ io.on('connection', (socket) => {
         const user = getUser(socket.id);
 
         if (user) {
-            io.to(user.room).emit('message', generateMessage(chatMessage));
+            io.to(user.room).emit('message', generateMessage(user.username, chatMessage));
             callback('Message sent!!');
         }
  
@@ -58,7 +63,7 @@ io.on('connection', (socket) => {
         const user = getUser(socket.id);
 
         if (user) {
-            io.to(user.room).emit('locationMessage', generateMessage(`https://google.com/maps?q=${latitude},${longitude}`));
+            io.to(user.room).emit('locationMessage', generateMessage(user.username, `https://google.com/maps?q=${latitude},${longitude}`));
 
             callback('Location recieved');
         }
@@ -71,7 +76,11 @@ io.on('connection', (socket) => {
         const user = removeUser(socket.id);
 
         if (user) {
-            io.to(user.room).emit('message', generateMessage(`${user.username} has left the room....Booo!!!`));
+            io.to(user.room).emit('message', generateMessage('Admin', `${user.username} has left the room....Booo!!!`));
+            io.to(user.room).emit('roomData', {
+                room: user.room,
+                users: getUsersInRoom(user.room)
+            });
         }
         
     });

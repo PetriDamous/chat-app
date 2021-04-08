@@ -3,10 +3,12 @@ const $formInput = document.getElementById('form-input');
 const $formSubmit = document.getElementById('form-submit');
 const $sendLocation = document.getElementById("send-location");
 const $message = document.getElementById('message');
+const $userList = document.getElementById('user-list');
 
 // Templates
 const messageTemplate = document.getElementById('message-template').innerHTML;
 const locationTemplate = document.getElementById('location-template').innerHTML;
+const roomTemplate = document.getElementById('room-template').innerHTML;
 
 // Connects client to server
 const socket = io();
@@ -17,6 +19,7 @@ const {username, room} = Qs.parse(location.search, {ignoreQueryPrefix: true});
 // Listening for incoming messages
 socket.on('message', (message) => {
     const html = Mustache.render(messageTemplate, {
+        username: message.username,
         message: message.text,
         createdAt: moment(message.createdAt).format('h:mm a')
     });
@@ -26,11 +29,21 @@ socket.on('message', (message) => {
 
 socket.on('locationMessage', (location) => {
     const html = Mustache.render(locationTemplate, {
+        username: location.username,
         location: location.text,
         createdAt: moment(location.createdAt).format('h:mm a')
     });
 
     $message.insertAdjacentHTML('beforeend', html);
+});
+
+socket.on('roomData', ({room, users}) => {
+    const html = Mustache.render(roomTemplate, {
+        room,
+        users
+    });
+
+    $userList.innerHTML = html;
 });
 
 
@@ -74,6 +87,5 @@ socket.emit('join', {username, room}, (error) => {
     if (error) {
         location.href = '/';
         alert(error);        
-    } 
-    
+    }    
 });
